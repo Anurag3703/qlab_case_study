@@ -1,7 +1,7 @@
 'use client';
 
 import { AlertTriangle, Info, Search, Sparkles, XCircle } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ComposedChart, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 
@@ -80,6 +80,8 @@ const BMWQualityDashboard = () => {
   const [showOutliersOnly, setShowOutliersOnly] = useState(false);
   const [stdDevThreshold, setStdDevThreshold] = useState(2);
   const [aiAnalysis, setAiAnalysis] = useState('');
+  const [showSplash, setShowSplash] = useState(true); 
+
 
   // === OUTLIER CALCULATION ===
   const calculateOutliers = useMemo(() => {
@@ -198,6 +200,14 @@ const BMWQualityDashboard = () => {
       criticalDefects: data.filter(d => d.severityRating >= 8).length
     };
   }, [data]);
+
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setShowSplash(false);
+  }, 3000); // Changed from 2500 to 3000
+
+  return () => clearTimeout(timer);
+}, []);
   
   const pareto = useMemo(() => {
   const countByDefect: Record<string, number> = {};
@@ -648,6 +658,39 @@ Keep response under 200 words. Be specific and actionable.`;
 
   return (
     <>
+  {showSplash && (
+  <div 
+    className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950"
+    style={{
+      animation: 'fadeOut 3s ease-in-out forwards',
+      animationName: 'fadeOut'
+    }}
+  >
+    <h1 
+      className="text-9xl font-black tracking-tight bg-gradient-to-r from-blue-400 via-cyan-300 to-blue-500 bg-clip-text text-transparent"
+      style={{
+        animation: 'scaleAndFade 3s ease-in-out forwards',
+        animationName: 'scaleAndFade'
+      }}
+    >
+      BMW-QLab
+    </h1>
+    
+    <style>{`
+      @keyframes fadeOut {
+        0%, 70% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      
+      @keyframes scaleAndFade {
+        0% { opacity: 0; transform: scale(1); }
+        30% { opacity: 1; transform: scale(1); }
+        70% { opacity: 1; transform: scale(1.5); }
+        100% { opacity: 0; transform: scale(2.5); }
+      }
+    `}</style>
+  </div>
+)}
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
