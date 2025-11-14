@@ -198,6 +198,7 @@ const BMWQualityDashboard = () => {
       criticalDefects: data.filter(d => d.severityRating >= 8).length
     };
   }, [data]);
+  
   const pareto = useMemo(() => {
   const countByDefect: Record<string, number> = {};
   const countByPart: Record<string, number> = {};
@@ -568,10 +569,11 @@ const quickActions = useMemo(() => {
       direction: sortConfig.key === key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
     });
   };
+  
 
   // === AI ANALYSIS ===
-  // === AI ANALYSIS ===
 const runAIAnalysis = async () => {
+  console.log('API Key loaded:', process.env.REACT_APP_GROK_API_KEY ? 'YES' : 'NO');
   const flaggedRecords = data.filter(d => d.flagged);
   if (flaggedRecords.length === 0) {
     setAiAnalysis('No flagged records to analyze.');
@@ -605,10 +607,19 @@ Provide ONLY:
 2. PREVENTIVE ACTIONS (2-3 bullet points)
 Keep response under 200 words. Be specific and actionable.`;
 
+    // ✔ CRA-compatible environment variable
+    const apiKey = process.env.REACT_APP_GROK_API_KEY;
+
+    if (!apiKey) {
+      throw new Error(
+        'API key not found. Please set REACT_APP_GROK_API_KEY in your .env or .env.local file.'
+      );
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': 'Bearer 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',
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -625,6 +636,7 @@ Keep response under 200 words. Be specific and actionable.`;
 
     const result = await response.json();
     const text = result?.choices?.[0]?.message?.content ?? 'No content returned';
+
     setAiAnalysis(text);
   } catch (err: any) {
     setAiAnalysis(`AI Analysis failed: ${err?.message ?? 'Unknown error'}`);
@@ -1051,63 +1063,7 @@ Keep response under 200 words. Be specific and actionable.`;
 </div>
 
 
-    </div>
-    {/* Recurrence clusters (triads) */}
-<div className="bg-slate-800 rounded-xl p-6 border border-slate-700">
-  <div className="flex items-center justify-between mb-4">
-    <h3 className="text-xl font-bold">Recurrence Clusters: Defect × Station × Part</h3>
-    <p className="text-slate-400 text-sm">Ranked by weighted impact</p>
-  </div>
-
-  <div className="overflow-x-auto">
-    <table className="w-full text-sm">
-      <thead>
-        <tr className="border-b border-slate-700">
-          <th className="p-2 text-left">Defect</th>
-          <th className="p-2 text-left">Station</th>
-          <th className="p-2 text-left">Part</th>
-          <th className="p-2 text-right">Count</th>
-          <th className="p-2 text-right">Avg Severity</th>
-          <th className="p-2 text-right">Avg Res (h)</th>
-          <th className="p-2 text-right">Unsolved</th>
-          <th className="p-2 text-right">Score</th>
-          <th className="p-2 text-left">Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        {triads.byScore.slice(0, 20).map((r, idx) => (
-          <tr key={`${r.defectName}-${r.station}-${r.partOfCar}`} className="border-b border-slate-700">
-            <td className="p-2">{idx + 1}. {r.defectName}</td>
-            <td className="p-2">{r.station}</td>
-            <td className="p-2">{r.partOfCar}</td>
-            <td className="p-2 text-right">{r.count}</td>
-            <td className="p-2 text-right">{r.avgSeverity}</td>
-            <td className="p-2 text-right">{r.avgResH}</td>
-            <td className="p-2 text-right">{r.rootCauseNo}</td>
-            <td className="p-2 text-right">{r.score}</td>
-            <td className="p-2">
-              <button
-                onClick={() => {
-                  // Optional: filter your data table to this triad
-                  const keyMatch = (d: Defect) =>
-                    d.defectName === r.defectName &&
-                    d.station === r.station &&
-                    d.partOfCar === r.partOfCar;
-                  const triadSample = data.filter(keyMatch).slice(0, 20);
-                  console.table(triadSample);
-                  alert(`Filtered ${triadSample.length} records for:\n${r.defectName} @ ${r.station} on ${r.partOfCar}`);
-                }}
-                className="px-3 py-1 rounded bg-cyan-600 hover:bg-cyan-500 text-white text-xs"
-              >
-                Filter records
-              </button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-    
-  </div>
+   
 </div>
 
   </div>
